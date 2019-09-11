@@ -53,7 +53,6 @@ class Loader(object):
                     name = k[7:]  # remove 'module.' of dataparallel
                     new_state_dict[name] = v
                 self.model.load_state_dict(new_state_dict)
-
             else:
                 if (torch.cuda.device_count() > 1 or args.load_parallel):
                     self.model.module.load_state_dict(checkpoint['state_dict'])

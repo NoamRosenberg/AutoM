@@ -160,6 +160,8 @@ class AutoDeeplab (nn.Module) :
         self.level_8 = []
         self.level_16 = []
         self.level_32 = []
+        # print(x.device.index)
+        # print(self.stem0[0].weight.device.index)
         temp = self.stem0 (x)
         temp = self.stem1 (temp)
         self.level_4.append (self.stem2 (temp))

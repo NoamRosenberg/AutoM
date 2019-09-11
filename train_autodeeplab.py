@@ -23,8 +23,7 @@ try:
     APEX_AVAILABLE = True
 except ModuleNotFoundError:
     APEX_AVAILABLE = False
-
-
+APEX_AVAILABLE = False
 print('working with pytorch version {}'.format(torch.__version__))
 print('with cuda version {}'.format(torch.version.cuda))
 print('cudnn enabled: {}'.format(torch.backends.cudnn.enabled))
@@ -114,10 +113,10 @@ class Trainer(object):
 
 
         # Using data parallel
-        if args.cuda and len(self.args.gpu_ids) >1:
+        if args.cuda and torch.cuda.device_count() >1:
             if self.opt_level == 'O2' or self.opt_level == 'O3':
                 print('currently cannot run with nn.DataParallel and optimization level', self.opt_level)
-            self.model = torch.nn.DataParallel(self.model, device_ids=self.args.gpu_ids)
+            self.model = torch.nn.DataParallel(self.model)
             patch_replication_callback(self.model)
             print('training on multiple-GPUs')
 
@@ -351,9 +350,6 @@ def main():
     # cuda, seed and logging
     parser.add_argument('--no-cuda', action='store_true', default=
                         False, help='disables CUDA training')
-    parser.add_argument('--gpu-ids', type=str, default='0',
-                        help='use which gpu to train, must be a \
-                        comma-separated list of integers only (default=0)')
     parser.add_argument('--seed', type=int, default=1, metavar='S',
                         help='random seed (default: 1)')
     # checking point
@@ -372,14 +368,9 @@ def main():
 
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
-    if args.cuda:
-        try:
-            args.gpu_ids = [int(s) for s in args.gpu_ids.split(',')]
-        except ValueError:
-            raise ValueError('Argument --gpu_ids must be a comma-separated list of integers only')
-
+    
     if args.sync_bn is None:
-        if args.cuda and len(args.gpu_ids) > 1:
+        if args.cuda and torch.cuda.device_count() > 1:
             args.sync_bn = True
         else:
             args.sync_bn = False
@@ -388,19 +379,19 @@ def main():
     if args.epochs is None:
         epoches = {
             'coco': 30,
-            'cityscapes': 200,
+            'cityscapes': 90,
             'pascal': 50,
             'kd':10
         }
         args.epochs = epoches[args.dataset.lower()]
 
     if args.batch_size is None:
-        args.batch_size = 4 * len(args.gpu_ids)
+        args.batch_size = 4 * torch.cuda.device_count()
 
     if args.test_batch_size is None:
         args.test_batch_size = args.batch_size
 
-    #args.lr = args.lr / (4 * len(args.gpu_ids)) * args.batch_size
+    #args.lr = args.lr / (4 * torch.cuda.device_count()) * args.batch_size
 
 
     if args.checkname is None:
