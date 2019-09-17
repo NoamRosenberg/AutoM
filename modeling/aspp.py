@@ -47,15 +47,15 @@ class _ASPPModule(nn.Module):
                 m.bias.data.zero_()
 
 
-class ASPP(nn.Module):
-    def __init__(self, backbone, output_stride, BatchNorm, args, separate):
-        super(ASPP, self).__init__()
+class ASPP_train(nn.Module):
+    def __init__(self, backbone, output_stride, filter_multiplier=20, steps=5, BatchNorm=nn.BatchNorm2d, separate=False):
+        super(ASPP_train, self).__init__()
         if backbone == 'drn':
             inplanes = 512
         elif backbone == 'mobilenet':
             inplanes = 320
         elif backbone == 'autodeeplab':
-            inplanes = int(args.filter_multiplier * args.steps * (args.down_sample_level / 4))
+            inplanes = int(filter_multiplier * steps * (output_stride / 4))
         else:
             inplanes = 2048
         if output_stride == 16:
@@ -117,4 +117,4 @@ class ASPP(nn.Module):
 
 
 def build_aspp(backbone, output_stride, BatchNorm, args, separate):
-    return ASPP(backbone, output_stride, BatchNorm, args, separate)
+    return ASPP_train(backbone, output_stride, args.filter_multiplier, 5, BatchNorm, separate)
