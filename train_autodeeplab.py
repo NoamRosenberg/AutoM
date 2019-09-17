@@ -350,7 +350,6 @@ def main():
     # cuda, seed and logging
     parser.add_argument('--no-cuda', action='store_true', default=
                         False, help='disables CUDA training')
-
     parser.add_argument('--use_amp', action='store_true', default=
                         False)
     parser.add_argument('--seed', type=int, default=1, metavar='S',

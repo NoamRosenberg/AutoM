@@ -87,7 +87,7 @@ class Cell(nn.Module):
 
 
 class newModel (nn.Module):
-    def __init__(self, network_arch, cell_arch, num_classes, num_layers, criterion=None, filter_multiplier=20, block_multiplier=5, step=5, cell=Cell, full_net='deeplab_v3+'):
+    def __init__(self, network_arch, cell_arch, num_classes, num_layers, filter_multiplier=20, block_multiplier=5, step=5, cell=Cell, full_net='deeplab_v3+'):
         super(newModel, self).__init__()
 
         self.cells = nn.ModuleList()
