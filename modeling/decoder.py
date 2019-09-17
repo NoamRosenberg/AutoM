@@ -26,7 +26,6 @@ class Decoder(nn.Module):
             low_level_inplanes = 256
         elif backbone == 'mobilenet':
             low_level_inplanes = 24
-
         elif backbone == 'autodeeplab':
             low_level_inplanes = args.filter_multiplier * args.steps
         else:
@@ -38,14 +37,15 @@ class Decoder(nn.Module):
         self.relu = nn.ReLU()
         self.feature_projection = nn.Sequential(
             self.conv_feature, self.bn1, self.relu)
+        concate_channel = 48 + 256
         if separate == True:
-            self.conv1 = nn.Sequential(SeparateConv(304, 256, kernel_size=3, stride=1, padding=1, bias=False),
+            self.conv1 = nn.Sequential(SeparateConv(concate_channel, 256, kernel_size=3, stride=1, padding=1, bias=False),
                                        nn.Dropout(0.5))
             self.conv2 = nn.Sequential(SeparateConv(256, 256, kernel_size=3, stride=1, padding=1, bias=False),
                                        nn.Dropout(0.1))
 
         else:
-            self.conv1 = nn.Sequential(nn.Conv2d(304, 256, kernel_size=3, stride=1, padding=1, bias=False),
+            self.conv1 = nn.Sequential(nn.Conv2d(concate_channel, 256, kernel_size=3, stride=1, padding=1, bias=False),
                                        BatchNorm(256),
                                        nn.ReLU(),
                                        nn.Dropout(0.5))

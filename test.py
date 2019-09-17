@@ -7,7 +7,7 @@ from auto_deeplab import AutoDeeplab
 from thop import profile
 from torchsummary import summary
 import warnings
-
+from new_model import get_default_net
 warnings.filterwarnings('ignore')
 
 
@@ -42,9 +42,9 @@ def obtain_default_search_args():
     parser.add_argument('--clean-module', type=int, default=0)
     parser.add_argument('--workers', type=int, default=0,
                         metavar='N', help='dataloader threads')
-    parser.add_argument('--base_size', type=int, default=320,
+    parser.add_argument('--base_size', type=int, default=321,
                         help='base image size')
-    parser.add_argument('--crop_size', type=int, default=320,
+    parser.add_argument('--crop_size', type=int, default=321,
                         help='crop image size')
     parser.add_argument('--resize', type=int, default=512,
                         help='resize image size')
@@ -200,7 +200,7 @@ if __name__ == "__main__":
     import torch
     # model = ResNet101(BatchNorm=nn.BatchNorm2d,
     #                   pretrained=True, output_stride=8)
-    input = torch.rand(2, 3, 128, 128).cuda()
+    input = torch.rand(2, 3, 129, 129).cuda()
     # output, low_level_feat = model(input)
     # print(output.size())
     # print(low_level_feat.size())
@@ -209,17 +209,19 @@ if __name__ == "__main__":
     #                 backbone='autodeeplab',
     #                 output_stride=8,
     #                 sync_bn=False,
-    #                 freeze_bn=False, args=args, separate=False)
-    args = obtain_default_search_args()
-    criterion = torch.nn.CrossEntropyLoss(ignore_index=255)
-    model = AutoDeeplab(num_classes=19, num_layers=12, criterion=criterion, filter_multiplier=args.filter_multiplier,
-                        block_multiplier=args.block_multiplier, step=args.step).cuda()
+    #                 freeze_bn=False, args=args, separate=False).cuda()
+    model = get_default_net().cuda()
+    # args = obtain_default_search_args()
+    # criterion = torch.nn.CrossEntropyLoss(ignore_index=255)
+    # model = AutoDeeplab(num_classes=19, num_layers=12, criterion=criterion, filter_multiplier=args.filter_multiplier,
+    #                     block_multiplier=args.block_multiplier, step=args.step).cuda()
     
 
     output = model(input)
-    print(output)
+    print(output[0].shape)
+    print(output[1].shape)
     # model.backbone(input)
-    # total_params(model)
+    total_params(model)
     # print(model.backbone.cells[1])
     # params, flops = profile(model, inputs=(input,))
     # print(params)

@@ -41,7 +41,7 @@ class Trainer(object):
         # Define Tensorboard Summary
         self.summary = TensorboardSummary(self.saver.experiment_dir)
         self.writer = self.summary.create_summary()
-        self.use_amp = True if APEX_AVAILABLE else False
+        self.use_amp = True if (APEX_AVAILABLE and args.use_amp) else False
         self.opt_level = args.opt_level
 
         kwargs = {'num_workers': args.workers, 'pin_memory': True, 'drop_last':True}
@@ -299,7 +299,7 @@ def main():
                         metavar='N', help='dataloader threads')
     parser.add_argument('--base_size', type=int, default=320,
                         help='base image size')
-    parser.add_argument('--crop_size', type=int, default=320,
+    parser.add_argument('--crop_size', type=int, default=321,
                         help='crop image size')
     parser.add_argument('--resize', type=int, default=512,
                         help='resize image size')
@@ -350,6 +350,15 @@ def main():
     # cuda, seed and logging
     parser.add_argument('--no-cuda', action='store_true', default=
                         False, help='disables CUDA training')
+<<<<<<< HEAD
+=======
+  
+    parser.add_argument('--use_amp', action='store_true', default=
+                        False)  
+    parser.add_argument('--gpu-ids', type=str, default='0',
+                        help='use which gpu to train, must be a \
+                        comma-separated list of integers only (default=0)')
+>>>>>>> 575d68ac66129355451f3d8383d3cddea1290412
     parser.add_argument('--seed', type=int, default=1, metavar='S',
                         help='random seed (default: 1)')
     # checking point
@@ -379,7 +388,7 @@ def main():
     if args.epochs is None:
         epoches = {
             'coco': 30,
-            'cityscapes': 90,
+            'cityscapes': 40,
             'pascal': 50,
             'kd':10
         }
