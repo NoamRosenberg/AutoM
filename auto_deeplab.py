@@ -163,7 +163,7 @@ class AutoDeeplab (nn.Module) :
         self.level_4.append (self.stem2 (temp))
 
         count = 0
-        normalized_betas = torch.randn(12, 4, 3).cuda()
+        normalized_betas = [[[0]*3]*4]*12
 
         # Softmax on alphas and betas
         if torch.cuda.device_count() > 1:
