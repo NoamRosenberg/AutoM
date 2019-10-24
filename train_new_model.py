@@ -40,7 +40,8 @@ class trainNew(object):
         model = newModel(network_arch= new_network_arch,
                          cell_arch = new_cell_arch,
                          num_classes=self.nclass,
-                         num_layers=12)
+                         num_layers=12,
+                         full_net=None)
 #                        output_stride=args.out_stride,
 #                        sync_bn=args.sync_bn,
 #                        freeze_bn=args.freeze_bn)
@@ -243,7 +244,7 @@ def main():
     parser.add_argument('--use-balanced-weights', action='store_true', default=False,
                         help='whether to use balanced weights (default: False)')
     # optimizer params
-    parser.add_argument('--lr', type=float, default=None, metavar='LR',
+    parser.add_argument('--lr', type=float, default=0.05, metavar='LR',
                         help='learning rate (default: auto)')
     parser.add_argument('--lr-scheduler', type=str, default='poly',
                         choices=['poly', 'step', 'cos'],
@@ -277,7 +278,7 @@ def main():
                         help='evaluuation interval (default: 1)')
     parser.add_argument('--no-val', action='store_true', default=False,
                         help='skip validation during training')
-    parser.add_argument('--filter_multiplier', type=int, default=20)
+    parser.add_argument('--filter_multiplier', type=int, default=4)
     parser.add_argument('--autodeeplab', type=str, default='train',
                         choices=['search', 'train'])
     parser.add_argument('--load-parallel', type=int, default=0)
@@ -285,14 +286,14 @@ def main():
 
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
-    if args.cuda:
-        try:
-            args.gpu_ids = [int(s) for s in args.gpu_ids.split(',')]
-        except ValueError:
-            raise ValueError('Argument --gpu_ids must be a comma-separated list of integers only')
+    # if args.cuda:
+    #     try:
+    #         args.gpu_ids = [int(s) for s in args.gpu_ids.split(',')]
+    #     except ValueError:
+    #         raise ValueError('Argument --gpu_ids must be a comma-separated list of integers only')
 
     if args.sync_bn is None:
-        if args.cuda and len(args.gpu_ids) > 1:
+        if args.cuda and torch.cuda.device_count() > 1:
             args.sync_bn = True
         else:
             args.sync_bn = False
@@ -307,7 +308,7 @@ def main():
         args.epochs = epoches[args.dataset.lower()]
 
     if args.batch_size is None:
-        args.batch_size = 4 * len(args.gpu_ids)
+        args.batch_size = 4 * torch.cuda.device_count()
 
     if args.test_batch_size is None:
         args.test_batch_size = args.batch_size
@@ -318,7 +319,7 @@ def main():
             'cityscapes': 0.01,
             'pascal': 0.007,
         }
-        args.lr = lrs[args.dataset.lower()] / (4 * len(args.gpu_ids)) * args.batch_size
+        args.lr = lrs[args.dataset.lower()] / (4 * torch.cuda.device_count()) * args.batch_size
 
 
     if args.checkname is None:

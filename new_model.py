@@ -14,15 +14,12 @@ from modeling.aspp import ASPP_train
 
 
 class Cell(nn.Module):
-
     def __init__(self, steps, block_multiplier, prev_prev_fmultiplier,
                  prev_filter_multiplier,
                  cell_arch, network_arch,
                  filter_multiplier, downup_sample):
-
         super(Cell, self).__init__()
         self.cell_arch = cell_arch
-
         self.C_in = block_multiplier * filter_multiplier
         self.C_out = filter_multiplier
         self.C_prev = int(block_multiplier * prev_filter_multiplier)
@@ -90,7 +87,7 @@ class Cell(nn.Module):
 
 
 class newModel (nn.Module):
-    def __init__(self, network_arch, cell_arch, num_classes, num_layers, criterion=None, filter_multiplier=20, block_multiplier=5, step=5, cell=Cell, full_net='deeplab_v3+'):
+    def __init__(self, network_arch, cell_arch, num_classes, num_layers, filter_multiplier=20, block_multiplier=5, step=5, cell=Cell, full_net='deeplab_v3+'):
         super(newModel, self).__init__()
 
         self.cells = nn.ModuleList()
@@ -101,7 +98,6 @@ class newModel (nn.Module):
         self._step = step
         self._block_multiplier = block_multiplier
         self._filter_multiplier = filter_multiplier
-        self._criterion = criterion
         self._full_net = full_net
         initial_fm = 128
         self.stem0 = nn.Sequential(
@@ -125,38 +121,35 @@ class newModel (nn.Module):
         filter_param_dict = {0: 1, 1: 2, 2: 4, 3: 8}
         for i in range(self._num_layers):
             level_option = torch.sum(self.network_arch[i], dim=1)
-            prev_level_option = torch.sum(self.network_arch[i-1], dim=1)
-            prev_prev_level_option = torch.sum(
-                self.network_arch[i-2], dim=1)
             level = torch.argmax(level_option).item()
-            prev_level = torch.argmax(prev_level_option).item()
-            prev_prev_level = torch.argmax(prev_prev_level_option).item()
+            if i>=1:
+                prev_level_option = torch.sum(self.network_arch[i-1], dim=1)
+                prev_level = torch.argmax(prev_level_option).item()
+                if i>=2:
+                    prev_prev_level_option = torch.sum(self.network_arch[i-2], dim=1)
+                    prev_prev_level = torch.argmax(prev_prev_level_option).item()
             if i == 0:
                 downup_sample = 0
                 _cell = cell(self._step, self._block_multiplier, ini_initial_fm / block_multiplier,
                              initial_fm / block_multiplier,
                              self.cell_arch, self.network_arch[i],
-                             self._filter_multiplier *
-                             filter_param_dict[level],
+                             self._filter_multiplier * filter_param_dict[level],
                              downup_sample)
             else:
                 three_branch_options = torch.sum(self.network_arch[i], dim=0)
                 downup_sample = torch.argmax(three_branch_options).item() - 1
                 if i == 1:
-                    _cell = cell(self._step, self._block_multiplier,
-                                 initial_fm / block_multiplier,
-                                 self._filter_multiplier * 1,
+                    _cell = cell(self._step, self._block_multiplier, initial_fm / block_multiplier,
+                                 self._filter_multiplier * filter_param_dict[prev_level],
                                  self.cell_arch, self.network_arch[i],
-                                 self._filter_multiplier *
-                                 filter_param_dict[level],
+                                 self._filter_multiplier * filter_param_dict[level],
                                  downup_sample)
                 else:
                     _cell = cell(self._step, self._block_multiplier, self._filter_multiplier * filter_param_dict[prev_prev_level],
-                                 self._filter_multiplier *
-                                 filter_param_dict[prev_level],
+                                 self._filter_multiplier * filter_param_dict[prev_level],
                                  self.cell_arch, self.network_arch[i],
-                                 self._filter_multiplier *
-                                 filter_param_dict[level], downup_sample)
+                                 self._filter_multiplier * filter_param_dict[level],
+                                 downup_sample)
 
             self.cells += [_cell]
 
